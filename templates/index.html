@@ -92,12 +92,10 @@
                     errorMsg.innerText = data.error;
                     errorMsg.classList.remove('hidden');
                 } else {
-                    // টাইটেল এবং থাম্বনেইল সেট করা
                     document.getElementById('video-title').innerText = data.title;
                     document.getElementById('thumb-img').src = data.thumbnail;
                     document.getElementById('thumb-download-btn').href = `/download-thumbnail?url=${encodeURIComponent(data.thumbnail)}`;
 
-                    // ফরম্যাট বাটন তৈরি
                     const formatsList = document.getElementById('formats-list');
                     formatsList.innerHTML = ''; 
 
@@ -109,7 +107,7 @@
                                 <span class="font-medium text-white">${f.resolution}</span>
                                 <span class="text-xs bg-gray-600 px-2 py-0.5 rounded text-gray-300 ml-2">${f.ext}</span>
                             </div>
-                            <a href="${f.download_url}" target="_blank" onclick="increaseCount()"
+                            <a href="${f.download_url}" onclick="increaseCount()"
                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition duration-150">
                                 ↓ ডাউনলোড
                             </a>
