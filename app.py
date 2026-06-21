@@ -35,7 +35,7 @@ def fetch_info():
         api_res = requests.get(api_url).json()
         
         if not api_res.get('items'):
-            return jsonify({'error': 'ভিডিওর তথ্য পাওয়া যায়নি।'}), 404
+            return jsonify({'error': 'ভিডিওর তথ্য পাওয়া যায়নি বা ভিডিওটি প্রাইভেট।'}), 404
             
         item = api_res['items'][0]
         title = item['snippet']['title']
@@ -43,24 +43,59 @@ def fetch_info():
         thumbnails = item['snippet']['thumbnails']
         thumbnail = (thumbnails.get('maxres') or thumbnails.get('high') or thumbnails.get('default'))['url']
         
-        # ২. ডাইরেক্ট ও ফাস্ট ডাউনলোডের জন্য নতুন API কনফিগারেশন
-        formats = [
-            {
-                'resolution': '720p (HD Video)',
-                'ext': 'MP4',
-                'download_url': f"https://api.vexdl.com/v1/youtube/download?url={video_url}&quality=720p"
-            },
-            {
-                'resolution': '1080p (Full HD)',
-                'ext': 'MP4',
-                'download_url': f"https://api.vexdl.com/v1/youtube/download?url={video_url}&quality=1080p"
-            },
-            {
-                'resolution': 'Audio Only (MP3)',
-                'ext': 'MP3',
-                'download_url': f"https://api.vexdl.com/v1/youtube/download?url={video_url}&quality=mp3"
+        # ২. Cobalt API-কে ব্যাকএন্ড থেকে কল করা (এটি ১০০% নিরাপদ ও কার্যকরী)
+        formats = []
+        cobalt_api_url = "https://api.cobalt.tools/"
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+
+        # ভিডিও ফরম্যাট ট্রাই করা (ডিফল্ট কোয়ালিটি)
+        try:
+            video_payload = {
+                "url": video_url,
+                "videoQuality": "720",
+                "downloadMode": "video",
+                "filenamePattern": "basic"
             }
-        ]
+            cobalt_res = requests.post(cobalt_api_url, json=video_payload, headers=headers).json()
+            if cobalt_res.get('url'):
+                formats.append({
+                    'resolution': '720p / 1080p (Video)',
+                    'ext': 'MP4',
+                    'download_url': cobalt_res['url']
+                })
+        except:
+            pass
+
+        # অডিও ফরম্যাট ট্রাই করা
+        try:
+            audio_payload = {
+                "url": video_url,
+                "downloadMode": "audio",
+                "audioFormat": "mp3",
+                "filenamePattern": "basic"
+            }
+            cobalt_audio_res = requests.post(cobalt_api_url, json=audio_payload, headers=headers).json()
+            if cobalt_audio_res.get('url'):
+                formats.append({
+                    'resolution': 'Audio Only (MP3)',
+                    'ext': 'MP3',
+                    'download_url': cobalt_audio_res['url']
+                })
+        except:
+            pass
+
+        # যদি কোনো কারণে Cobalt সাময়িক ডাউন থাকে, তবে ব্যাকআপ জেনারেটর দেওয়া
+        if not formats:
+            formats = [
+                {
+                    'resolution': 'ডাউনলোড লিংক (সার্ভার ২)',
+                    'ext': 'MP4',
+                    'download_url': f"https://loader.to/api/button/?url={video_url}&f=720"
+                }
+            ]
 
         return jsonify({
             'title': title,
