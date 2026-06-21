@@ -84,6 +84,8 @@ def download_thumbnail():
         )
     except Exception as e:
         return str(e), 500
+# Vercel সার্ভারলেস ফাংশনের জন্য এটি প্রয়োজন
+app = app
 
 if __name__ == '__main__':
     app.run(debug=True)
